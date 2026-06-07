@@ -1,3 +1,3 @@
 DBMS Final Project
 by
-TEAM 3NF.
+"TEAM 3NF".
