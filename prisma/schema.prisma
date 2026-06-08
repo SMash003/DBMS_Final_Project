@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -13,163 +7,292 @@ datasource db {
   provider = "postgresql"
 }
 
+enum CaseStatusType {
+  OPEN
+  UNDER_INVESTIGATION
+  CLOSED
+  COLD
+}
+
+enum RankLevel {
+  OFFICER
+  DETECTIVE
+  SERGEANT
+  LIEUTENANT
+  CAPTAIN
+  CHIEF
+}
+
+enum VerdictType {
+  PENDING
+  GUILTY
+  ACQUITTED
+  DISMISSED
+}
+
+enum SentenceType {
+  INCARCERATION
+  PROBATION
+  RESTITUTION
+  COMMUNITY_SERVICE
+  FINE
+}
+
 enum UserRole {
   ADMIN
-  CUSTOMER
+  OFFICER
+  CLERK
 }
 
+model Criminal {
+  id               String   @id @default(uuid()) @db.Uuid()
+  firstName        String   @db.VarChar(50)
+  lastName         String   @db.VarChar(50)
+  dateOfBirth      DateTime @db.Date
+  gender           String?  @db.VarChar(15)
+  aliases          String?
+  address          String?
+  identificationNo String?  @unique @db.VarChar(30)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  criminalCases CriminalCase[]
+  arrests       Arrest[]
+  sentences     Sentence[]
+
+  @@index([lastName])
+  @@index([identificationNo])
+}
+
+model Station {
+  id               String  @id @default(uuid()) @db.Uuid()
+  stationName      String  @db.VarChar(100)
+  locationAddress  String
+  jurisdictionArea String? @db.VarChar(150)
+  contactNumber    String? @db.VarChar(20)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  officers Officer[]
+  cases    Case[]
+}
+
+model Officer {
+  id            String    @id @default(uuid()) @db.Uuid()
+  badgeNumber   String    @unique @db.VarChar(20)
+  firstName     String    @db.VarChar(50)
+  lastName      String    @db.VarChar(50)
+  rankLevel     RankLevel
+  contactNumber String?   @db.VarChar(20)
+
+  stationId String @db.Uuid()
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  station Station @relation(fields: [stationId], references: [id], onDelete: Cascade)
+
+  evidence Evidence[] @relation("OfficerEvidence")
+  arrests  Arrest[]
+
+  user User?
+
+  @@index([stationId])
+}
+
+model Case {
+  id               String    @id @default(uuid()) @db.Uuid()
+  caseNumber       String    @unique @db.VarChar(20)
+  title            String    @db.VarChar(150)
+  description      String?
+  dateReported     DateTime
+  dateOfOccurrence DateTime?
+
+  status CaseStatusType @default(OPEN)
+
+  stationId String @db.Uuid()
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  station Station @relation(fields: [stationId], references: [id], onDelete: Cascade)
+
+  criminalCases CriminalCase[]
+  evidence      Evidence[]
+  arrests       Arrest[]
+  courtCases    CourtCase[]
+  victims       Victim[]
+  witnesses     Witness[]
+
+  @@index([caseNumber])
+  @@index([stationId])
+}
+
+model Crime {
+  id            String  @id @default(uuid()) @db.Uuid()
+  crimeType     String  @unique @db.VarChar(100)
+  severityLevel String  @db.VarChar(50)
+  legalCodeRef  String? @db.VarChar(100)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  criminalCases CriminalCase[]
+}
+
+model CriminalCase {
+  id          String  @id @default(uuid()) @db.Uuid()
+  criminalId  String  @db.Uuid()
+  caseId      String  @db.Uuid()
+  crimeId     String  @db.Uuid()
+  roleInCrime String? @db.VarChar(50)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  criminal Criminal @relation(fields: [criminalId], references: [id], onDelete: Cascade)
+  case     Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  crime    Crime    @relation(fields: [crimeId], references: [id], onDelete: Cascade)
+
+  @@unique([criminalId, caseId, crimeId])
+  @@index([criminalId])
+  @@index([caseId])
+  @@index([crimeId])
+}
+
+model Evidence {
+  id              String   @id @default(uuid()) @db.Uuid()
+  evidenceCode    String   @unique @db.VarChar(30)
+  description     String
+  dateCollected   DateTime
+  storageLocation String?  @db.VarChar(100)
+
+  caseId               String @db.Uuid()
+  collectedByOfficerId String @db.Uuid()
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  case Case @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  collectedByOfficer Officer @relation("OfficerEvidence", fields: [collectedByOfficerId], references: [id], onDelete: Cascade)
+
+  @@index([caseId])
+  @@index([collectedByOfficerId])
+}
+
+model Arrest {
+  id             String   @id @default(uuid()) @db.Uuid()
+  arrestDateTime DateTime
+  arrestLocation String?
+
+  criminalId String @db.Uuid()
+  caseId     String @db.Uuid()
+  officerId  String @db.Uuid()
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  criminal Criminal @relation(fields: [criminalId], references: [id], onDelete: Cascade)
+  case     Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  officer  Officer  @relation(fields: [officerId], references: [id], onDelete: Cascade)
+
+  @@index([criminalId])
+  @@index([caseId])
+  @@index([officerId])
+}
+
+model CourtCase {
+  id          String    @id @default(uuid()) @db.Uuid()
+  courtName   String    @db.VarChar(150)
+  judgeName   String?   @db.VarChar(100)
+  hearingDate DateTime?
+
+  verdict VerdictType @default(PENDING)
+
+  caseId String @db.Uuid()
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  case Case @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  sentences Sentence[]
+
+  @@index([caseId])
+}
+
+model Sentence {
+  id             String       @id @default(uuid()) @db.Uuid()
+  sentenceType   SentenceType
+  durationMonths Int?
+  fineAmount     Decimal?     @db.Decimal(15, 2)
+  startDate      DateTime?    @db.Date
+
+  courtCaseId String @db.Uuid()
+  criminalId  String @db.Uuid()
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  courtCase CourtCase @relation(fields: [courtCaseId], references: [id], onDelete: Cascade)
+  criminal  Criminal  @relation(fields: [criminalId], references: [id], onDelete: Cascade)
+
+  @@index([courtCaseId])
+  @@index([criminalId])
+}
+
+model Victim {
+  id          String  @id @default(uuid()) @db.Uuid()
+  firstName   String? @db.VarChar(50)
+  lastName    String? @db.VarChar(50)
+  contactInfo String?
+  statement   String?
+
+  caseId String @db.Uuid()
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  case Case @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@index([caseId])
+}
+
+model Witness {
+  id               String  @id @default(uuid()) @db.Uuid()
+  firstName        String? @db.VarChar(50)
+  lastName         String? @db.VarChar(50)
+  contactInfo      String?
+  statementSummary String?
+  protectionStatus Boolean @default(false)
+
+  caseId String @db.Uuid()
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  case Case @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@index([caseId])
+}
 
 model User {
-  id String @id @default(uuid()) @db.Uuid()
-  email String @unique @db.VarChar(255)
-  firstName String @db.VarChar(100)
-  lastName String @db.VarChar(100)
-  passwordHash String @db.VarChar(255)
+  id           String  @id @default(uuid()) @db.Uuid()
+  username     String  @unique @db.VarChar(50)
+  passwordHash String  @db.VarChar(255)
+  email        String? @unique @db.VarChar(100)
+
+  role UserRole
+
+  officerId String? @unique @db.Uuid()
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  role UserRole @default(CUSTOMER)
-  cart Cart[]
-  orders Order[]
-}
+  officer Officer? @relation(fields: [officerId], references: [id])
 
-
-model Product {
-  id String @id @default(uuid()) @db.Uuid()
-  title String @db.VarChar(255)
-  slug String @unique @db.VarChar(255)
-  description String @db.Text()
-  basePrice Float
-  originalPrice Float?
-  stockQuantity Int @default(0)
-  specifications Json
-  isFeatured Boolean @default(false)
-  isActive Boolean @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  categoryId String @db.Uuid()
-  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-
-  images ProductImage[]
-  variants ProductVariant[]
-  cartItems CartItem[]
-  orderItems OrderItem[]
-}
-
-
-model Category {
-  id String @id @default(uuid()) @db.Uuid()
-  name String @db.VarChar(100)
-  slug String @unique @db.VarChar(255)
-  description String @db.Text()
-  imageUrl String @db.VarChar(255)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  parentId String? @db.Uuid()
-  parent Category? @relation("CategoryToCategory", fields: [parentId], references: [id], onDelete: Cascade)
-  subcategories Category[] @relation("CategoryToCategory")
-
-  products Product[]
-
-}
-
-
-model ProductImage {
-  id String @id @default(uuid()) @db.Uuid()
-  productId String @db.Uuid()
-  imageUrl String @db.VarChar(255)
-  altText String? @db.VarChar(255)
-  displayOrder Int @default(0)
-  isPrimary Boolean @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-}
-
-
-model ProductVariant {
-  id String @id @default(uuid()) @db.Uuid()
-  productId String @db.Uuid()
-  variantName String @db.VarChar(50)
-  variantValue String @db.VarChar(50)
-  priceAdjustment Float @default(0.00)
-  stockQuantity Int @default(0)
-  imageUrl String? @db.VarChar(255)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  cartItems CartItem[]
-}
-
-model Cart {
-  id String @id @default(uuid()) @db.Uuid()
-  userId String? @db.Uuid()
-  sessionId String? @db.VarChar(255)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
-  cartItems CartItem[]
-}
-
-
-model CartItem {
-  id String @id @default(uuid()) @db.Uuid()
-  cartId String @db.Uuid()
-  productId String @db.Uuid()
-  variantId String? @db.Uuid()
-  quantity Int @default(1)
-  addedAt DateTime @default(now())
-
-  cart Cart @relation(fields: [cartId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  variant ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
-}
-
-
-enum OrderStatus {
-  PENDING
-  PROCESSING
-  SHIPPED
-  DELIVERED
-  CANCELLED
-}
-
-enum paymentStatus {
-  PENDING
-  PAID
-  FAILED
-}
-
-model Order {
-  id String @id @default(uuid()) @db.Uuid()
-  userId String @db.Uuid()
-  status OrderStatus @default(PENDING)
-  totalAmount Float
-  shippingAddressSnapshot Json
-  paymentMethod String @db.VarChar(50)
-  paymentStatus paymentStatus @default(PENDING)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  orderItems OrderItem[]
-}
-
-model OrderItem {
-  id String @id @default(uuid()) @db.Uuid()
-  orderId String @db.Uuid()
-  productId String? @db.Uuid()
-  productSnapshot Json
-  variantSnapshot Json?
-  quantity Int
-  priceAtPurchase Float
-  totalPrice Float
-
-  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  @@index([officerId])
 }
