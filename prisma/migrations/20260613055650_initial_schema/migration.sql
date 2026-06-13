@@ -2,7 +2,13 @@
 CREATE TYPE "CaseStatusType" AS ENUM ('OPEN', 'UNDER_INVESTIGATION', 'CLOSED', 'COLD');
 
 -- CreateEnum
-CREATE TYPE "RankLevel" AS ENUM ('OFFICER', 'DETECTIVE', 'SERGEANT', 'LIEUTENANT', 'CAPTAIN', 'CHIEF');
+CREATE TYPE "RankLevel" AS ENUM ('CONSTABLE', 'NAIK', 'ASI', 'SERGEANT', 'SI', 'INSPECTOR', 'ASP', 'ADDITIONAL_SP', 'SP', 'ADDITIONAL_DIG', 'DIG', 'ADDITIONAL_IGP', 'IGP');
+
+-- CreateEnum
+CREATE TYPE "OfficerDesignation" AS ENUM ('OC', 'INVESTIGATION_OFFICER', 'DUTY_OFFICER', 'CIRCLE_OFFICER', 'SDPO', 'COMMANDANT', 'COMMISSIONER');
+
+-- CreateEnum
+CREATE TYPE "Gender" AS ENUM ('MALE', 'FEMALE', 'OTHER');
 
 -- CreateEnum
 CREATE TYPE "VerdictType" AS ENUM ('PENDING', 'GUILTY', 'ACQUITTED', 'DISMISSED');
@@ -19,16 +25,19 @@ CREATE TABLE "Criminal" (
     "firstName" VARCHAR(50) NOT NULL,
     "lastName" VARCHAR(50) NOT NULL,
     "dateOfBirth" DATE NOT NULL,
-    "gender" VARCHAR(15),
+    "gender" "Gender" NOT NULL,
     "aliases" TEXT,
     "address" TEXT,
-    "identificationNo" VARCHAR(30),
+    "nidNumber" VARCHAR(17) NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Criminal_pkey" PRIMARY KEY ("id")
 );
 
+ALTER TABLE "Criminal"
+ADD CONSTRAINT criminal_nid_check
+CHECK ("nidNumber" ~ '^([0-9]{10}|[0-9]{17})$');
 -- CreateTable
 CREATE TABLE "Station" (
     "id" UUID NOT NULL,
@@ -48,6 +57,7 @@ CREATE TABLE "Officer" (
     "badgeNumber" VARCHAR(20) NOT NULL,
     "firstName" VARCHAR(50) NOT NULL,
     "lastName" VARCHAR(50) NOT NULL,
+    "gender" "Gender" NOT NULL,
     "rankLevel" "RankLevel" NOT NULL,
     "contactNumber" VARCHAR(20),
     "stationId" UUID NOT NULL,
@@ -161,6 +171,7 @@ CREATE TABLE "Victim" (
     "id" UUID NOT NULL,
     "firstName" VARCHAR(50),
     "lastName" VARCHAR(50),
+    "gender" "Gender" NOT NULL,
     "contactInfo" TEXT,
     "statement" TEXT,
     "caseId" UUID NOT NULL,
@@ -175,6 +186,7 @@ CREATE TABLE "Witness" (
     "id" UUID NOT NULL,
     "firstName" VARCHAR(50),
     "lastName" VARCHAR(50),
+    "gender" "Gender" NOT NULL,
     "contactInfo" TEXT,
     "statementSummary" TEXT,
     "protectionStatus" BOOLEAN NOT NULL DEFAULT false,
@@ -200,13 +212,13 @@ CREATE TABLE "User" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Criminal_identificationNo_key" ON "Criminal"("identificationNo");
+CREATE UNIQUE INDEX "Criminal_nidNumber_key" ON "Criminal"("nidNumber");
 
 -- CreateIndex
 CREATE INDEX "Criminal_lastName_idx" ON "Criminal"("lastName");
 
 -- CreateIndex
-CREATE INDEX "Criminal_identificationNo_idx" ON "Criminal"("identificationNo");
+CREATE INDEX "Criminal_nidNumber_idx" ON "Criminal"("nidNumber");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Officer_badgeNumber_key" ON "Officer"("badgeNumber");
