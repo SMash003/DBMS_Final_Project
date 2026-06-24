@@ -31,7 +31,7 @@ enum RankLevel {
 }
 
 enum OfficerDesignation {
-  OC                 
+  OC
   INVESTIGATION_OFFICER
   DUTY_OFFICER
   CIRCLE_OFFICER
@@ -64,23 +64,22 @@ enum SentenceType {
 enum UserRole {
   ADMIN
   OFFICER
-  CLERK
 }
 
 model Criminal {
   id          String   @id @default(uuid()) @db.Uuid()
-  firstName   String   @db.VarChar(50)
-  lastName    String   @db.VarChar(50)
-  dateOfBirth DateTime @db.Date
+  firstName   String   @map("first_name") @db.VarChar(50)
+  lastName    String   @map("last_name") @db.VarChar(50)
+  dateOfBirth DateTime @map("date_of_birth") @db.Date
   gender      Gender
 
-  aliases     String?
-  address     String?
+  aliases String? @db.Text
+  address String? @db.Text
 
-  nidNumber   String   @unique @db.VarChar(17)
+  nidNumber   String   @unique @map("identification_no") @db.VarChar(17)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   criminalCases CriminalCase[]
   arrests       Arrest[]
@@ -88,64 +87,23 @@ model Criminal {
 
   @@index([lastName])
   @@index([nidNumber])
-}
-
-model Station {
-  id               String  @id @default(uuid()) @db.Uuid()
-  stationName      String  @db.VarChar(100)
-  locationAddress  String
-  jurisdictionArea String? @db.VarChar(150)
-  contactNumber    String? @db.VarChar(20)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  officers Officer[]
-  cases    Case[]
-}
-
-model Officer {
-  id            String    @id @default(uuid()) @db.Uuid()
-  badgeNumber   String    @unique @db.VarChar(20)
-  firstName     String    @db.VarChar(50)
-  lastName      String    @db.VarChar(50)
-  gender        Gender
-  rankLevel     RankLevel
-  designation   OfficerDesignation?
-  contactNumber String?   @db.VarChar(20)
-
-  stationId String @db.Uuid()
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  station Station @relation(fields: [stationId], references: [id], onDelete: Cascade)
-
-  evidence Evidence[] @relation("OfficerEvidence")
-  arrests  Arrest[]
-
-  user User?
-
-  @@index([stationId])
+  @@map("criminals")
 }
 
 model Case {
-  id               String    @id @default(uuid()) @db.Uuid()
-  caseNumber       String    @unique @db.VarChar(20)
-  title            String    @db.VarChar(150)
-  description      String?
-  dateReported     DateTime
-  dateOfOccurrence DateTime?
+  id               String         @id @default(uuid()) @db.Uuid()
+  caseNumber       String         @unique @map("case_number") @db.VarChar(20)
+  title            String         @db.VarChar(150)
+  description      String?        @db.Text
+  dateReported     DateTime       @map("date_reported")
+  dateOfOccurrence DateTime?      @map("date_of_occurrence")
+  status           CaseStatusType @default(OPEN)
+  stationId        String         @map("station_id") @db.Uuid()
 
-  status CaseStatusType @default(OPEN)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  stationId String @db.Uuid()
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  station Station @relation(fields: [stationId], references: [id], onDelete: Cascade)
-
+  station       Station        @relation(fields: [stationId], references: [id], onDelete: Cascade)
   criminalCases CriminalCase[]
   evidence      Evidence[]
   arrests       Arrest[]
@@ -155,29 +113,32 @@ model Case {
 
   @@index([caseNumber])
   @@index([stationId])
+  @@map("cases")
 }
 
 model Crime {
   id            String  @id @default(uuid()) @db.Uuid()
-  crimeType     String  @unique @db.VarChar(100)
-  severityLevel String  @db.VarChar(50)
-  legalCodeRef  String? @db.VarChar(100)
+  crimeType     String  @unique @map("crime_type") @db.VarChar(100)
+  severityLevel String  @map("severity_level") @db.VarChar(50)
+  legalCodeRef  String? @map("legal_code_ref") @db.VarChar(100)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   criminalCases CriminalCase[]
+
+  @@map("crimes")
 }
 
 model CriminalCase {
   id          String  @id @default(uuid()) @db.Uuid()
-  criminalId  String  @db.Uuid()
-  caseId      String  @db.Uuid()
-  crimeId     String  @db.Uuid()
-  roleInCrime String? @db.VarChar(50)
+  criminalId  String  @map("criminal_id") @db.Uuid()
+  caseId      String  @map("case_id") @db.Uuid()
+  crimeId     String  @map("crime_id") @db.Uuid()
+  roleInCrime String? @map("role_in_crime") @db.VarChar(50)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   criminal Criminal @relation(fields: [criminalId], references: [id], onDelete: Cascade)
   case     Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
@@ -187,40 +148,78 @@ model CriminalCase {
   @@index([criminalId])
   @@index([caseId])
   @@index([crimeId])
+  @@map("criminal_case")
+}
+
+model Officer {
+  id            String              @id @default(uuid()) @db.Uuid()
+  badgeNumber   String              @unique @map("badge_number") @db.VarChar(20)
+  firstName     String              @map("first_name") @db.VarChar(50)
+  lastName      String              @map("last_name") @db.VarChar(50)
+  gender        Gender
+  rankLevel     RankLevel           @map("rank_level")
+  designation   OfficerDesignation?
+  contactNumber String?             @map("contact_number") @db.VarChar(20)
+  stationId     String              @map("station_id") @db.Uuid()
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  station  Station    @relation(fields: [stationId], references: [id], onDelete: Cascade)
+  evidence Evidence[] @relation("OfficerEvidence")
+  arrests  Arrest[]
+  user     User?
+
+  @@index([stationId])
+  @@map("officers")
+}
+
+model Station {
+  id               String  @id @default(uuid()) @db.Uuid()
+  stationName      String  @map("station_name") @db.VarChar(100)
+  locationAddress  String  @map("location_address") @db.Text
+  jurisdictionArea String? @map("jurisdiction_area") @db.VarChar(150)
+  contactNumber    String? @map("contact_number") @db.VarChar(20)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  officers Officer[]
+  cases    Case[]
+
+  @@map("stations")
 }
 
 model Evidence {
-  id              String   @id @default(uuid()) @db.Uuid()
-  evidenceCode    String   @unique @db.VarChar(30)
-  description     String
-  dateCollected   DateTime
-  storageLocation String?  @db.VarChar(100)
+  id                   String   @id @default(uuid()) @db.Uuid()
+  evidenceCode         String   @unique @map("evidence_code") @db.VarChar(30)
+  description          String   @db.Text
+  dateCollected        DateTime @map("date_collected")
+  storageLocation      String?  @map("storage_location") @db.VarChar(100)
+  caseId               String   @map("case_id") @db.Uuid()
+  collectedByOfficerId String   @map("collected_by_officer_id") @db.Uuid()
 
-  caseId               String @db.Uuid()
-  collectedByOfficerId String @db.Uuid()
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  case Case @relation(fields: [caseId], references: [id], onDelete: Cascade)
-
-  collectedByOfficer Officer @relation("OfficerEvidence", fields: [collectedByOfficerId], references: [id], onDelete: Cascade)
+  case       Case    @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  officerLog Officer @relation("OfficerEvidence", fields: [collectedByOfficerId], references: [id], onDelete: Cascade)
 
   @@index([caseId])
   @@index([collectedByOfficerId])
+  @@map("evidence")
 }
 
 model Arrest {
   id             String   @id @default(uuid()) @db.Uuid()
-  arrestDateTime DateTime
-  arrestLocation String?
+  arrestDateTime DateTime @map("arrest_date_time")
+  arrestLocation String?  @map("arrest_location") @db.Text
+  criminalId     String   @map("criminal_id") @db.Uuid()
+  caseId         String   @map("case_id") @db.Uuid()
+  officerId      String   @map("officer_id") @db.Uuid()
 
-  criminalId String @db.Uuid()
-  caseId     String @db.Uuid()
-  officerId  String @db.Uuid()
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   criminal Criminal @relation(fields: [criminalId], references: [id], onDelete: Cascade)
   case     Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
@@ -229,99 +228,97 @@ model Arrest {
   @@index([criminalId])
   @@index([caseId])
   @@index([officerId])
+  @@map("arrests")
 }
 
 model CourtCase {
-  id          String    @id @default(uuid()) @db.Uuid()
-  courtName   String    @db.VarChar(150)
-  judgeName   String?   @db.VarChar(100)
-  hearingDate DateTime?
+  id          String      @id @default(uuid()) @db.Uuid()
+  courtName   String      @map("court_name") @db.VarChar(150)
+  judgeName   String?     @map("judge_name") @db.VarChar(100)
+  hearingDate DateTime?   @map("hearing_date")
+  verdict     VerdictType @default(PENDING)
+  caseId      String      @map("case_id") @db.Uuid()
 
-  verdict VerdictType @default(PENDING)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  caseId String @db.Uuid()
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  case Case @relation(fields: [caseId], references: [id], onDelete: Cascade)
-
+  case      Case       @relation(fields: [caseId], references: [id], onDelete: Cascade)
   sentences Sentence[]
 
   @@index([caseId])
+  @@map("court_cases")
 }
 
 model Sentence {
   id             String       @id @default(uuid()) @db.Uuid()
-  sentenceType   SentenceType
-  durationMonths Int?
-  fineAmount     Decimal?     @db.Decimal(15, 2)
-  startDate      DateTime?    @db.Date
+  sentenceType   SentenceType @map("sentence_type")
+  durationMonths Int?         @map("duration_months")
+  fineAmount     Decimal?     @map("fine_amount") @db.Decimal(15, 2)
+  startDate      DateTime?    @map("start_date") @db.Date
+  courtCaseId    String       @map("court_case_id") @db.Uuid()
+  criminalId     String       @map("criminal_id") @db.Uuid()
 
-  courtCaseId String @db.Uuid()
-  criminalId  String @db.Uuid()
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   courtCase CourtCase @relation(fields: [courtCaseId], references: [id], onDelete: Cascade)
   criminal  Criminal  @relation(fields: [criminalId], references: [id], onDelete: Cascade)
 
   @@index([courtCaseId])
   @@index([criminalId])
+  @@map("sentences")
 }
 
 model Victim {
   id          String  @id @default(uuid()) @db.Uuid()
-  firstName   String? @db.VarChar(50)
-  lastName    String? @db.VarChar(50)
+  firstName   String? @map("first_name") @db.VarChar(50)
+  lastName    String? @map("last_name") @db.VarChar(50)
   gender      Gender
-  contactInfo String?
-  statement   String?
+  contactInfo String? @map("contact_info") @db.Text
+  statement   String? @db.Text
+  caseId      String  @map("case_id") @db.Uuid()
 
-  caseId String @db.Uuid()
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   case Case @relation(fields: [caseId], references: [id], onDelete: Cascade)
 
   @@index([caseId])
+  @@map("victims")
 }
 
 model Witness {
   id               String  @id @default(uuid()) @db.Uuid()
-  firstName        String? @db.VarChar(50)
-  lastName         String? @db.VarChar(50)
+  firstName        String? @map("first_name") @db.VarChar(50)
+  lastName         String? @map("last_name") @db.VarChar(50)
   gender           Gender
-  contactInfo      String?
-  statementSummary String?
-  protectionStatus Boolean @default(false)
+  contactInfo      String? @map("contact_info") @db.Text
+  statementSummary String? @map("statement_summary") @db.Text
+  protectionStatus Boolean @default(false) @map("protection_status")
+  caseId           String  @map("case_id") @db.Uuid()
 
-  caseId String @db.Uuid()
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   case Case @relation(fields: [caseId], references: [id], onDelete: Cascade)
 
   @@index([caseId])
+  @@map("witnesses")
 }
 
 model User {
-  id           String  @id @default(uuid()) @db.Uuid()
-  username     String  @unique @db.VarChar(50)
-  passwordHash String  @db.VarChar(255)
-  email        String? @unique @db.VarChar(100)
+  id           String   @id @default(uuid()) @db.Uuid()
+  username     String   @unique @db.VarChar(50)
+  passwordHash String   @map("password_hash") @db.VarChar(255)
+  email        String?  @unique @db.VarChar(100)
+  role         UserRole
+  officerId    String?  @unique @map("officer_id") @db.Uuid()
 
-  role UserRole
-
-  officerId String? @unique @db.Uuid()
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   officer Officer? @relation(fields: [officerId], references: [id])
 
   @@index([officerId])
+  @@map("users")
 }
