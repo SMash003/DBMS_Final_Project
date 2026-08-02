@@ -8,6 +8,7 @@ connectDB();
 //importing different routes
 import authRoutes from './routes/authRoutes.js'
 import stationRoutes from './routes/stationRoutes.js'
+import officersRoutes from './routes/officerRoutes.js'
 
 const app= express();
 const port = process.env.APP_PORT || 5000;
@@ -18,6 +19,7 @@ app.use(express.json());
 //Imported routes api
 app.use("/api/users", authRoutes);
 app.use("/api/stations", stationRoutes);
+app.use('/api/officers',officersRoutes);
 
 //initial route
 app.get('/', (req,res)=>{
