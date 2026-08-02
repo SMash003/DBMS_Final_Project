@@ -9,6 +9,7 @@ connectDB();
 import authRoutes from './routes/authRoutes.js'
 import stationRoutes from './routes/stationRoutes.js'
 import officersRoutes from './routes/officerRoutes.js'
+import crimeRoutes from './routes/crimeRoutes.js'
 
 const app= express();
 const port = process.env.APP_PORT || 5000;
@@ -20,6 +21,7 @@ app.use(express.json());
 app.use("/api/users", authRoutes);
 app.use("/api/stations", stationRoutes);
 app.use('/api/officers',officersRoutes);
+app.use('/api/crimes',crimeRoutes);
 
 //initial route
 app.get('/', (req,res)=>{
