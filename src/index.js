@@ -17,6 +17,8 @@ import victimRoutes from './routes/victimRoutes.js'
 import witnessRoutes from './routes/witnessRoutes.js'
 import evidenceRoutes from './routes/evidenceRoutes.js'
 import arrestRoutes from './routes/arrestRoutes.js'
+import courtCaseRoutes from './routes/courtCaseRoutes.js'
+import sentenceRoutes from './routes/sentenceRoutes.js'
 
 
 //middleware and other things
@@ -38,7 +40,8 @@ app.use('/api/victims',victimRoutes);
 app.use('/api/witnesses', witnessRoutes);
 app.use('/api/evidences', evidenceRoutes);
 app.use('/api/arrestes',arrestRoutes);
-
+app.use('/api/courtCases', courtCaseRoutes);
+app.use('/api/sentences', sentenceRoutes);
 
 //initial route
 app.get('/', (req,res)=>{
