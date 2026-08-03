@@ -1,4 +1,5 @@
 import {prisma} from "../config/db.js";
+import bcrypt from "bcryptjs";
 
  // Creating User
 export const registerUser = async (req, res) => {
