@@ -1,11 +1,9 @@
 import {prisma} from "../config/db.js";
 
  // Creating User
-
-
 export const registerUser = async (req, res) => {
   try {
-    const { username, passwordHash, email, role, officerId } = req.body;
+    const { username, password, email, role, officerId } = req.body;
     
     const userExist = await prisma.user.findUnique({
         where: {email: email}
@@ -13,6 +11,11 @@ export const registerUser = async (req, res) => {
     if(userExist){
         return res.status(400).json({error: "User already exist"});
     }
+
+    //hash password 
+    //it requir npm i bcryptjs for pass saving 
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(password, salt)//hash take 2 value 1 is user pass another is salt value
 
     const user = await prisma.user.create({
       data: {
