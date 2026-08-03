@@ -12,7 +12,14 @@ import officersRoutes from './routes/officerRoutes.js'
 import crimeRoutes from './routes/crimeRoutes.js'
 import criminalsRoutes from './routes/criminalsRoutes.js'
 import caseRoutes from './routes/caseRoutes.js'
+import criminalCaseRoutes from './routes/criminalCaseRoutes.js'
+import victimRoutes from './routes/victimRoutes.js'
+import witnessRoutes from './routes/witnessRoutes.js'
+import evidenceRoutes from './routes/evidenceRoutes.js'
+import arrestRoutes from './routes/arrestRoutes.js'
 
+
+//middleware and other things
 const app= express();
 const port = process.env.APP_PORT || 5000;
 console.log(process.env.APP_PORT)
@@ -26,6 +33,12 @@ app.use('/api/officers',officersRoutes);
 app.use('/api/crimes',crimeRoutes);
 app.use('/api/criminals', criminalsRoutes);
 app.use('/api/cases',caseRoutes);
+app.use('/api/criminalCases',criminalCaseRoutes);
+app.use('/api/victims',victimRoutes);
+app.use('/api/witnesses', witnessRoutes);
+app.use('/api/evidences', evidenceRoutes);
+app.use('/api/arrestes',arrestRoutes);
+
 
 //initial route
 app.get('/', (req,res)=>{
