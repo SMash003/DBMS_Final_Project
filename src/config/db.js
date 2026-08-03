@@ -29,4 +29,5 @@ if (process.env.NODE_ENV !== "production"){{
 //     await prisma.$disconnect();
 // }
 
-// export {prisma, connectDB, disconnectDB};
+// export {connectDB, disconnectDB};
+export {prisma};
