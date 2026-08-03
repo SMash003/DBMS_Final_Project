@@ -14,3 +14,5 @@ router.get("/", getCriminalCases);
 router.get("/:id", getCriminalCaseById);
 router.put("/:id", updateCriminalCase);
 router.delete("/:id", deleteCriminalCase);
+
+export default router;
