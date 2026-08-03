@@ -1,9 +1,10 @@
 import express from 'express';
 import {config} from 'dotenv';
-import { connectDB } from './config/db.js';
+//import { connectDB } from './config/db.js';
 config();
-connectDB();
 
+//no need during deployment
+//connectDB();
 
 //importing different routes
 import authRoutes from './routes/authRoutes.js'
@@ -48,6 +49,10 @@ app.get('/', (req,res)=>{
     res.send("Criminal Alert")
 })
 
-const server = app.listen(port, ()=>{
-    console.log(`server is running in port : ${port}`);
-}) 
+//no need during deploy
+// const server = app.listen(port, ()=>{
+//     console.log(`server is running in port : ${port}`);
+// }) 
+
+//for deployment 
+export default app;
