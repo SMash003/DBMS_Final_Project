@@ -6,13 +6,6 @@
 
 The **Central Crime Registry (CCR)** is a RESTful Criminal Record Management System developed as a Database Management Systems (DBMS) Final Project. It provides a centralized platform for law enforcement agencies to manage criminal records, investigations, police stations, officers, evidence, arrests, victims, witnesses, court proceedings, and sentencing.
 
----
-
-# 📌 Repository
-
-**GitHub Repository**
-
-https://github.com/SMash003/DBMS_Final_Project
 
 ---
 
@@ -307,14 +300,3 @@ Department of Computer Science & Engineering
 
 International Islamic University Chittagong (IIUC)
 
-GitHub Repository
-
-https://github.com/SMash003/DBMS_Final_Project
-
----
-
-# 📄 License
-
-This project was developed by **TEAM 3NF** as part of the Database Management Systems (DBMS) course at the International Islamic University Chittagong (IIUC).
-
-© 2026 TEAM 3NF. All rights reserved.
