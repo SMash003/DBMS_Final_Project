@@ -2,6 +2,8 @@
 
 ### 🚔 Database Management Systems (DBMS) Final Project
 
+Live link: https://central-crime-registry.vercel.app/
+
 ## Developed by **TEAM 3NF**
 
 The **Central Crime Registry (CCR)** is a RESTful Criminal Record Management System developed as a Database Management Systems (DBMS) Final Project. It provides a centralized platform for law enforcement agencies to manage criminal records, investigations, police stations, officers, evidence, arrests, victims, witnesses, court proceedings, and sentencing.
