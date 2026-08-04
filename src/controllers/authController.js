@@ -47,7 +47,37 @@ export const registerUser = async (req, res) => {
   }
 };
 
-//get user by using ID
+//login user
+export const login = async(req,res)=>{
+    const {email, password}= req.body;
+
+    //check if user exist
+    const user = await prisma.user.findUnique({
+        where: {email: email}
+    });
+    if(!user){
+        return res.status(401).json({error: "Invalid User or password"});
+    }
+    //compare function compares plain users password with bcryped password
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if(!isPasswordValid){
+        return res.status(401).json({error: "Invalid User or password"});
+    }
+    
+    res.status(201).json({
+        status: "success login",
+        data:{
+            user:{
+                id: user.id,
+                email: email,
+            },
+        }
+    });
+};
+
+
+//get user profile by using ID
 export const getById = async (req, res) => {
   try {
     const { id } = req.params;

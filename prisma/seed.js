@@ -13,7 +13,7 @@ const main =async()=>{
         )
         console.log("done putting ",data.firstName);
     }
-    console.log("kam sesh");
+    console.log("Input done");
 }
 main().
 catch((err)=>{
